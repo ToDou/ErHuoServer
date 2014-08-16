@@ -18,6 +18,8 @@ public class SellS implements Serializable{
 	private String goodsphoto2;
 	private String goodsphoto3;
 	private String address;
+	private String qq;
+	private String email;
 	/**
 	 * @return the address
 	 */
@@ -148,6 +150,18 @@ public class SellS implements Serializable{
 	}
 	public void setSelltime(String selltime) {
 		this.selltime = selltime;
+	}
+	public String getQq() {
+		return qq;
+	}
+	public void setQq(String qq) {
+		this.qq = qq;
+	}
+	public String getEmail() {
+		return email;
+	}
+	public void setEmail(String email) {
+		this.email = email;
 	}
 	
 }

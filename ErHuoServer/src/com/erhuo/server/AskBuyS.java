@@ -3,6 +3,32 @@ import java.io.Serializable;
 
 @SuppressWarnings("serial")
 public class AskBuyS implements Serializable{
+	public String qq;
+	public String email;
+	/**
+	 * @return the qq
+	 */
+	public String getQq() {
+		return qq;
+	}
+	/**
+	 * @param qq the qq to set
+	 */
+	public void setQq(String qq) {
+		this.qq = qq;
+	}
+	/**
+	 * @return the email
+	 */
+	public String getEmail() {
+		return email;
+	}
+	/**
+	 * @param email the email to set
+	 */
+	public void setEmail(String email) {
+		this.email = email;
+	}
 	public String getUserid() {
 		return userid;
 	}

@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -129,8 +130,11 @@ public class LoginServer extends Thread {
 							u1.setUserName(m.getValue().get("username")
 									.toString());
 							u1.setSex(m.getValue().get("sex").toString());
-							u1.setAddress(m.getValue().get("address").toString());
+							u1.setAddress(m.getValue().get("address")
+									.toString());
 							u1.setGrade(m.getValue().get("grade").toString());
+							u1.setEmail(m.getValue().get("email").toString());
+							u1.setQq(m.getValue().get("qq").toString());
 							db.add(u1);
 							conn.commit();
 
@@ -170,6 +174,8 @@ public class LoginServer extends Thread {
 						table.put("sex", u1.getSex() + "");
 						table.put("address", u1.getAddress() + "");
 						table.put("grade", u1.getGrade() + "");
+						table.put("qq", u1.getQq() + "");
+						table.put("email", u1.getEmail() + "");
 						m1.setReturnValue(table);
 
 					} catch (Exception e) { // TODO: handle exception
@@ -279,7 +285,67 @@ public class LoginServer extends Thread {
 					}
 					oout.writeObject(m1);
 					oout.close();
-				} else if (m.getType().equalsIgnoreCase(MyMessage.CHANGEADDRESS)) {// 修改地址
+				} 
+				else if (m.getType().equalsIgnoreCase(MyMessage.CHANGEEMAIL)) {// 修改Email
+					Connection conn = DBManager.getDBManager().getConn();
+					MyMessage m1 = new MyMessage();
+					try {
+
+						conn.setAutoCommit(false);
+						UsersDB db = new UsersDB(conn);
+						Users u1 = new Users();
+						u1.setUserid(m.getValue().get("userid").toString());
+						u1.setEmail(m.getValue().get("email").toString());
+						db.setEmail(u1);
+						conn.commit();
+
+						Hashtable table = new Hashtable();
+						table.put("message", "ok");
+						table.put("email", u1.getEmail() + "");
+						m1.setReturnValue(table);
+
+					} catch (Exception e) { // TODO: handle exception
+						conn.rollback();
+						Hashtable table = new Hashtable();
+						table.put("message", "error");
+						m1.setReturnValue(table);
+					} finally {
+						conn.close();
+					}
+					oout.writeObject(m1);
+					oout.close();
+				} 
+				else if (m.getType().equalsIgnoreCase(MyMessage.CHANGEQQ)) {// 修改QQ
+					Connection conn = DBManager.getDBManager().getConn();
+					MyMessage m1 = new MyMessage();
+					try {
+
+						conn.setAutoCommit(false);
+						UsersDB db = new UsersDB(conn);
+						Users u1 = new Users();
+						u1.setUserid(m.getValue().get("userid").toString());
+						u1.setQq(m.getValue().get("qq").toString());
+						db.setQQ(u1);
+						conn.commit();
+
+						Hashtable table = new Hashtable();
+						table.put("message", "ok");
+						table.put("qq", u1.getQq() + "");
+						m1.setReturnValue(table);
+
+					} catch (Exception e) { // TODO: handle exception
+						conn.rollback();
+						Hashtable table = new Hashtable();
+						table.put("message", "error");
+						m1.setReturnValue(table);
+					} finally {
+						conn.close();
+					}
+					oout.writeObject(m1);
+					oout.close();
+				} 
+				else if (m.getType()
+						.equalsIgnoreCase(MyMessage.CHANGEADDRESS)) {// 修改地址
 					Connection conn = DBManager.getDBManager().getConn();
 					MyMessage m1 = new MyMessage();
 					try {
@@ -307,8 +373,7 @@ public class LoginServer extends Thread {
 					}
 					oout.writeObject(m1);
 					oout.close();
-				} 
-				else if (m.getType().equalsIgnoreCase(MyMessage.CHANGEGRADE)) {// 修改年级
+				} else if (m.getType().equalsIgnoreCase(MyMessage.CHANGEGRADE)) {// 修改年级
 					Connection conn = DBManager.getDBManager().getConn();
 					MyMessage m1 = new MyMessage();
 					try {
@@ -336,8 +401,7 @@ public class LoginServer extends Thread {
 					}
 					oout.writeObject(m1);
 					oout.close();
-				}
-				else if (m.getType().equalsIgnoreCase(MyMessage.ADDGOODS)) {// 添加商品
+				} else if (m.getType().equalsIgnoreCase(MyMessage.ADDGOODS)) {// 添加商品
 					Connection conn = DBManager.getDBManager().getConn();
 					MyMessage m1 = new MyMessage();
 					try {
@@ -416,6 +480,7 @@ public class LoginServer extends Thread {
 								MyMessage m2 = new MyMessage();
 								Hashtable table1 = new Hashtable();
 								table1.put("message", "ok");
+								table1.put("type", "goods");
 								table1.put("name", goodsname);
 								m2.setReturnValue(table1);
 								new Action(m2, useridString2).start();
@@ -491,6 +556,7 @@ public class LoginServer extends Thread {
 								Hashtable table1 = new Hashtable();
 								table1.put("message", "ok");
 								table1.put("name", agoodsname);
+								table1.put("type", "qiugou");
 								m2.setReturnValue(table1);
 								new Action(m2, userid).start();
 
@@ -511,7 +577,7 @@ public class LoginServer extends Thread {
 					try {
 
 						ResultSet rs = conn.createStatement().executeQuery(
-								"select top 10" + " askbuyid," + "agoodsname,"
+								"select top 10" + " askbuyid," + "agoodsname,"+ "userid,"
 										+ "agoodsclass," + "askbuycontent,"
 										+ "askbuytime, " + "askbuyphone, "
 										+ "userqiuname " + " from askbuy "
@@ -528,6 +594,17 @@ public class LoginServer extends Thread {
 							ask.setAskbuytime(rs.getString("askbuytime"));
 							ask.setAskbuyphone(rs.getString("askbuyphone"));
 							ask.setUserqiuname(rs.getString("userqiuname"));
+							ask.setUserid(rs.getString("userid"));
+							
+							PreparedStatement pst1 = conn
+									.prepareStatement("select qq,email from users where userid=?");
+							pst1.setObject(1,rs.getString("userid"));
+							ResultSet rs1 = pst1.executeQuery();
+							if (rs1.next()) {
+								ask.setQq(rs1.getString("qq"));
+								ask.setEmail(rs1.getString("email"));
+							}
+							
 							ab.add(ask);
 						}
 						Hashtable table = new Hashtable();
@@ -553,7 +630,7 @@ public class LoginServer extends Thread {
 					try {
 
 						ResultSet rs = conn.createStatement().executeQuery(
-								"select" + " askbuyid," + "agoodsname,"
+								"select" + " askbuyid," + "agoodsname,"+ "userid,"
 										+ "agoodsclass," + "askbuycontent,"
 										+ "askbuytime, " + "askbuyphone, "
 										+ "userqiuname " + " from askbuy "
@@ -570,6 +647,17 @@ public class LoginServer extends Thread {
 							ask.setAskbuytime(rs.getString("askbuytime"));
 							ask.setAskbuyphone(rs.getString("askbuyphone"));
 							ask.setUserqiuname(rs.getString("userqiuname"));
+							ask.setUserid(rs.getString("userid"));
+							
+							PreparedStatement pst1 = conn
+									.prepareStatement("select qq,email from users where userid=?");
+							pst1.setObject(1,rs.getString("userid"));
+							ResultSet rs1 = pst1.executeQuery();
+							if (rs1.next()) {
+								ask.setQq(rs1.getString("qq"));
+								ask.setEmail(rs1.getString("email"));
+							}
+							
 							ab.add(ask);
 						}
 						Hashtable table = new Hashtable();
@@ -599,7 +687,7 @@ public class LoginServer extends Thread {
 								.createStatement()
 								.executeQuery(
 										"select"
-												+ " askbuyid,"
+												+ " askbuyid,"+ "userid,"
 												+ "agoodsname,"
 												+ "agoodsclass,"
 												+ "askbuycontent,"
@@ -621,6 +709,17 @@ public class LoginServer extends Thread {
 							ask.setAskbuytime(rs.getString("askbuytime"));
 							ask.setAskbuyphone(rs.getString("askbuyphone"));
 							ask.setUserqiuname(rs.getString("userqiuname"));
+							ask.setUserid(rs.getString("userid"));
+							
+							PreparedStatement pst1 = conn
+									.prepareStatement("select qq,email from users where userid=?");
+							pst1.setObject(1,rs.getString("userid"));
+							ResultSet rs1 = pst1.executeQuery();
+							if (rs1.next()) {
+								ask.setQq(rs1.getString("qq"));
+								ask.setEmail(rs1.getString("email"));
+							}
+							
 							ab.add(ask);
 						}
 						Hashtable table = new Hashtable();
@@ -766,9 +865,10 @@ public class LoginServer extends Thread {
 					try {
 
 						ResultSet rs = conn.createStatement().executeQuery(
-								"select top 16" + " goodsid,userid," + "goodsname,"
-										+ "goodsprice," + "selltime, "
-										+ "goodsphoto1 " + " from sell "
+								"select top 16" + " goodsid,userid,"
+										+ "goodsname," + "goodsprice,"
+										+ "selltime, " + "goodsphoto1 "
+										+ " from sell "
 										+ " order by selltime desc");
 
 						Vector<SellS> ab = new Vector<SellS>();
@@ -777,19 +877,19 @@ public class LoginServer extends Thread {
 							SellS ask = new SellS();
 							ask.setGoodsid(rs.getInt("goodsid"));
 							ask.setGoodsname(rs.getString("goodsname"));
-							useridString=rs.getString("userid");
+							useridString = rs.getString("userid");
 							ask.setGoodsprice(rs.getString("goodsprice"));
 							ask.setSelltime(rs.getString("selltime"));
 							ask.setGoodsphoto1(rs.getString("goodsphoto1"));
 							PreparedStatement pst1 = conn
 									.prepareStatement("select address,grade from users where userid=?");
 							pst1.setObject(1, useridString);
-							ResultSet rs1=pst1.executeQuery();
+							ResultSet rs1 = pst1.executeQuery();
 							while (rs1.next()) {
 								ask.setGrade(rs1.getString("grade"));
 								ask.setAddress(rs1.getString("address"));
 							}
-							
+
 							ab.add(ask);
 						}
 						Hashtable table = new Hashtable();
@@ -829,19 +929,19 @@ public class LoginServer extends Thread {
 							SellS ask = new SellS();
 							ask.setGoodsid(rs.getInt("goodsid"));
 							ask.setGoodsname(rs.getString("goodsname"));
-							useridString=rs.getString("userid");
+							useridString = rs.getString("userid");
 							ask.setGoodsprice(rs.getString("goodsprice"));
 							ask.setSelltime(rs.getString("selltime"));
 							ask.setGoodsphoto1(rs.getString("goodsphoto1"));
 							PreparedStatement pst1 = conn
 									.prepareStatement("select address,grade from users where userid=?");
 							pst1.setObject(1, useridString);
-							ResultSet rs1=pst1.executeQuery();
+							ResultSet rs1 = pst1.executeQuery();
 							while (rs1.next()) {
 								ask.setGrade(rs1.getString("grade"));
 								ask.setAddress(rs1.getString("address"));
 							}
-							
+
 							ab.add(ask);
 						}
 						Hashtable table = new Hashtable();
@@ -885,23 +985,23 @@ public class LoginServer extends Thread {
 						Vector<SellS> ab = new Vector<SellS>();
 
 						while (rs.next()) {
-							
+
 							SellS ask = new SellS();
 							ask.setGoodsid(rs.getInt("goodsid"));
 							ask.setGoodsname(rs.getString("goodsname"));
-							useridString=rs.getString("userid");
+							useridString = rs.getString("userid");
 							ask.setGoodsprice(rs.getString("goodsprice"));
 							ask.setSelltime(rs.getString("selltime"));
 							ask.setGoodsphoto1(rs.getString("goodsphoto1"));
 							PreparedStatement pst1 = conn
 									.prepareStatement("select address,grade from users where userid=?");
 							pst1.setObject(1, useridString);
-							ResultSet rs1=pst1.executeQuery();
+							ResultSet rs1 = pst1.executeQuery();
 							while (rs1.next()) {
 								ask.setGrade(rs1.getString("grade"));
 								ask.setAddress(rs1.getString("address"));
 							}
-							
+
 							ab.add(ask);
 						}
 						Hashtable table = new Hashtable();
@@ -920,16 +1020,17 @@ public class LoginServer extends Thread {
 					}
 					oout.writeObject(m1);
 					oout.flush();
-			} else if (m.getType().equalsIgnoreCase(MyMessage.REFRESHGOODS)) {// 主菜单刷新
+				} else if (m.getType().equalsIgnoreCase(MyMessage.REFRESHGOODS)) {// 主菜单刷新
 					Connection conn = DBManager.getDBManager().getConn();
 					String useridString;
 					MyMessage m1 = new MyMessage();
 					try {
 
 						ResultSet rs = conn.createStatement().executeQuery(
-								"select top 16" + " goodsid,userid," + "goodsname,"
-										+ "goodsprice," + "selltime, "
-										+ "goodsphoto1 " + " from sell "
+								"select top 16" + " goodsid,userid,"
+										+ "goodsname," + "goodsprice,"
+										+ "selltime, " + "goodsphoto1 "
+										+ " from sell "
 										+ " order by selltime desc");
 
 						Vector<SellS> ab = new Vector<SellS>();
@@ -938,19 +1039,19 @@ public class LoginServer extends Thread {
 							SellS ask = new SellS();
 							ask.setGoodsid(rs.getInt("goodsid"));
 							ask.setGoodsname(rs.getString("goodsname"));
-							useridString=rs.getString("userid");
+							useridString = rs.getString("userid");
 							ask.setGoodsprice(rs.getString("goodsprice"));
 							ask.setSelltime(rs.getString("selltime"));
 							ask.setGoodsphoto1(rs.getString("goodsphoto1"));
 							PreparedStatement pst1 = conn
 									.prepareStatement("select address,grade from users where userid=?");
 							pst1.setObject(1, useridString);
-							ResultSet rs1=pst1.executeQuery();
+							ResultSet rs1 = pst1.executeQuery();
 							while (rs1.next()) {
 								ask.setGrade(rs1.getString("grade"));
 								ask.setAddress(rs1.getString("address"));
 							}
-							
+
 							ab.add(ask);
 						}
 						Hashtable table = new Hashtable();
@@ -974,13 +1075,14 @@ public class LoginServer extends Thread {
 					Connection conn = DBManager.getDBManager().getConn();
 					MyMessage m1 = new MyMessage();
 					try {
-						
+
 						String useridString;
 						String userid = m.getValue().get("userid").toString();
 						PreparedStatement pst = conn.prepareStatement("select"
-								+ " goodsid," + "goodsname," + "goodsprice,"+"userid,"
-								+ "selltime, " + "goodsphoto1 " + " from sell "
-								+ "where userid=?" + " order by selltime desc");
+								+ " goodsid," + "goodsname," + "goodsprice,"
+								+ "userid," + "selltime, " + "goodsphoto1 "
+								+ " from sell " + "where userid=?"
+								+ " order by selltime desc");
 						pst.setObject(1, userid);
 						ResultSet rs = pst.executeQuery();
 
@@ -990,19 +1092,20 @@ public class LoginServer extends Thread {
 							SellS ask = new SellS();
 							ask.setGoodsid(rs.getInt("goodsid"));
 							ask.setGoodsname(rs.getString("goodsname"));
-							useridString=rs.getString("userid");
+							useridString = rs.getString("userid");
+							ask.setUserid(useridString);
 							ask.setGoodsprice(rs.getString("goodsprice"));
 							ask.setSelltime(rs.getString("selltime"));
 							ask.setGoodsphoto1(rs.getString("goodsphoto1"));
 							PreparedStatement pst1 = conn
 									.prepareStatement("select address,grade from users where userid=?");
 							pst1.setObject(1, useridString);
-							ResultSet rs1=pst1.executeQuery();
+							ResultSet rs1 = pst1.executeQuery();
 							while (rs1.next()) {
 								ask.setGrade(rs1.getString("grade"));
 								ask.setAddress(rs1.getString("address"));
 							}
-							
+
 							ab.add(ask);
 						}
 						Hashtable table = new Hashtable();
@@ -1121,17 +1224,17 @@ public class LoginServer extends Thread {
 						int goodsid = (Integer) (m.getValue().get("goodsid"));
 						PreparedStatement pst = conn
 								.prepareStatement("select goodsname,userid,goodsprice,selltime,goodsinfo,goodsphoto2,goodsphoto3,usersellname,goodsphone,goodsphoto1  from sell where goodsid=?");
-						
+
 						pst.setObject(1, goodsid);
 						String useridString;
 						ResultSet rs = pst.executeQuery();
 						Vector<SellS> ab = new Vector<SellS>();
-						
+
 						while (rs.next()) {
 							SellS ask = new SellS();
 							ask.setGoodsname(rs.getString("goodsname"));
 							ask.setUserid(rs.getString("userid"));
-							useridString=rs.getString("userid");
+							useridString = rs.getString("userid");
 							ask.setGoodsprice(rs.getString("goodsprice"));
 							ask.setSelltime(rs.getString("selltime"));
 							ask.setGoodsphoto1(rs.getString("goodsphoto1"));
@@ -1141,18 +1244,19 @@ public class LoginServer extends Thread {
 							ask.setGoodsphoto3(rs.getString("goodsphoto3"));
 							ask.setGoodsphone(rs.getString("goodsphone"));
 							PreparedStatement pst1 = conn
-									.prepareStatement("select username,sex,address,grade from users where userid=?");
+									.prepareStatement("select address,grade,email,qq,sex from users where userid=?");
 							pst1.setObject(1, useridString);
-							ResultSet rs1=pst1.executeQuery();
+							ResultSet rs1 = pst1.executeQuery();
 							while (rs1.next()) {
-								ask.setUsername(rs1.getString("username"));
 								ask.setSex(rs1.getString("sex"));
 								ask.setGrade(rs1.getString("grade"));
 								ask.setAddress(rs1.getString("address"));
+								ask.setEmail(rs1.getString("email"));
+								ask.setQq(rs1.getString("qq"));
 							}
 							ab.add(ask);
 						}
-							Hashtable table = new Hashtable();
+						Hashtable table = new Hashtable();
 						table.put("message", "ok");
 						table.put("sell", ab);
 						m1.setReturnValue(table);
@@ -1170,13 +1274,13 @@ public class LoginServer extends Thread {
 				} else if (m.getType().equalsIgnoreCase(MyMessage.SHOUCANG)) {// 收藏
 					Connection conn = DBManager.getDBManager().getConn();
 					MyMessage m1 = new MyMessage();
-					
+
 					String userid2;
-					String username = null,sex = null,address = null,goodsname = null;
+					String username = null, sex = null, address = null, goodsname = null;
 					try {
 						Hashtable table1 = new Hashtable();
-						String userid=m.getValue().get("userid").toString();
-						int goodsid=(Integer)m.getValue().get("goodsid");
+						String userid = m.getValue().get("userid").toString();
+						int goodsid = (Integer) m.getValue().get("goodsid");
 						CollectDB db = new CollectDB(conn);
 						boolean b = db.findcollect(m.getValue().get("userid")
 								.toString(),
@@ -1186,15 +1290,14 @@ public class LoginServer extends Thread {
 							u1.setUserid(m.getValue().get("userid").toString());
 							u1.setGoodsid((Integer) (m.getValue()
 									.get("goodsid")));
-							
 
 							SellDB selldb = new SellDB(conn);
-							 userid2 = selldb.goodsowner((Integer) (m
-									.getValue().get("goodsid")));
+							userid2 = selldb.goodsowner((Integer) (m.getValue()
+									.get("goodsid")));
 							if (userid2.equals(m.getValue().get("userid")
 									.toString())) {
 								Hashtable table = new Hashtable();
-								
+
 								table.put("message", "isown");
 								m1.setReturnValue(table);
 							} else {
@@ -1202,42 +1305,44 @@ public class LoginServer extends Thread {
 								Hashtable table = new Hashtable();
 								table.put("message", "ok");
 								table1.put("message", "ok");
-								
-								
-								
+
 								PreparedStatement pst1 = conn
 										.prepareStatement("select username,sex,address from users where userid=?");
 								pst1.setObject(1, userid);
-								ResultSet rs1=pst1.executeQuery();
+								ResultSet rs1 = pst1.executeQuery();
 								while (rs1.next()) {
-									table1.put("username", rs1.getString("username"));
-									username=rs1.getString("username");
-									
-									sex=rs1.getString("sex");
-									table1.put("address",rs1.getString("address"));
-									address=rs1.getString("address");
+									table1.put("username",
+											rs1.getString("username"));
+									username = rs1.getString("username");
+
+									sex = rs1.getString("sex");
+									table1.put("address",
+											rs1.getString("address"));
+									address = rs1.getString("address");
 								}
-								
+
 								PreparedStatement pst2 = conn
 										.prepareStatement("select goodsname from sell where goodsid=?");
 								pst2.setObject(1, goodsid);
-								ResultSet rs2=pst2.executeQuery();
+								ResultSet rs2 = pst2.executeQuery();
 								while (rs2.next()) {
-									table1.put("goodsname", rs2.getString("goodsname"));
-									goodsname=rs2.getString("goodsname");
+									table1.put("goodsname",
+											rs2.getString("goodsname"));
+									goodsname = rs2.getString("goodsname");
 								}
 								table1.put("type", "shoucang");
-								String usersex="妹子";
+								String usersex = "妹子";
 								if (sex.equals("男")) {
-									usersex="汉子";
-									
+									usersex = "汉子";
+
 								}
 								table1.put("sex", usersex);
 								NewsDB db1 = new NewsDB(conn);
 								News u2 = new News();
 								u2.setUserid(userid2);
 								u2.setGoodsid(goodsid);
-								u2.setNews("亲！住在"+address+"的"+usersex+username+"收藏了您的" +goodsname);
+								u2.setNews("亲！住在" + address + "的" + usersex
+										+ username + "收藏了您的" + goodsname);
 								db1.add(u2);
 								System.out.println("=1");
 								System.out.println(userid2);
@@ -1285,13 +1390,13 @@ public class LoginServer extends Thread {
 							ResultSet rs1 = pst1.executeQuery();
 							while (rs1.next()) {
 								ask.setGoodsname(rs1.getString("goodsname"));
-								userid1=rs1.getString("userid");
+								userid1 = rs1.getString("userid");
 								ask.setGoodsprice(rs1.getString("goodsprice"));
 								ask.setGoodsphoto1(rs1.getString("goodsphoto1"));
 								PreparedStatement pst2 = conn
 										.prepareStatement("select address from users where userid=?");
 								pst2.setObject(1, userid1);
-								ResultSet rs2=pst2.executeQuery();
+								ResultSet rs2 = pst2.executeQuery();
 								while (rs2.next()) {
 									ask.setAddress(rs2.getString("address"));
 								}
@@ -1344,12 +1449,12 @@ public class LoginServer extends Thread {
 					oout.close();
 				} else if (m.getType().equalsIgnoreCase(MyMessage.PINGLUN)) {// 评论信息
 					Connection conn = DBManager.getDBManager().getConn();
-					int goodsid=(Integer)m.getValue().get("goodsid");
-					String userid1=m.getValue().get("userid").toString();
-					
+					int goodsid = (Integer) m.getValue().get("goodsid");
+					String userid1 = m.getValue().get("userid").toString();
+
 					MyMessage m1 = new MyMessage();
 					try {
-						String userid2 = null,username = null,goodsname = null;
+						String userid2 = null, username = null, goodsname = null;
 						PinglunDB db = new PinglunDB(conn);
 						Pinglun u1 = new Pinglun();
 						u1.setUserid(m.getValue().get("userid").toString());
@@ -1361,40 +1466,43 @@ public class LoginServer extends Thread {
 						Hashtable table1 = new Hashtable();
 						table.put("message", "ok");
 						table1.put("message", "ok");
-						
+
 						PreparedStatement pst1 = conn
 								.prepareStatement("select goodsname,userid from sell where goodsid=?");
 						pst1.setObject(1, goodsid);
-						ResultSet rs1=pst1.executeQuery();
+						ResultSet rs1 = pst1.executeQuery();
 						while (rs1.next()) {
 							table1.put("goodsname", rs1.getString("goodsname"));
-							goodsname=rs1.getString("goodsname");
-							userid2=rs1.getString("userid");
+							goodsname = rs1.getString("goodsname");
+							userid2 = rs1.getString("userid");
 							System.out.println(userid2);
 						}
-						
-						if (userid2!=userid1) {
+
+						if (!userid2.equals(userid1)) {
 							PreparedStatement pst2 = conn
 									.prepareStatement("select username from users where userid=?");
 							pst2.setObject(1, userid1);
-							ResultSet rs2=pst2.executeQuery();
+							ResultSet rs2 = pst2.executeQuery();
 							while (rs2.next()) {
-								table1.put("username", rs2.getString("username"));
-								username= rs2.getString("username");
+								table1.put("username",
+										rs2.getString("username"));
+								username = rs2.getString("username");
+								
+								
+								NewsDB db1 = new NewsDB(conn);
+								News u2 = new News();
+								u2.setUserid(userid2);
+								u2.setGoodsid(goodsid);
+								u2.setNews("亲！" + username + "在你的" + goodsname
+										+ "留了言赶紧查看吧！");
+								db1.add(u2);
+
+								table1.put("type", "liuyan");
+
+								MyMessage m2 = new MyMessage();
+								m2.setReturnValue(table1);
+								new Action(m2, userid2).start();
 							}
-							
-							NewsDB db1 = new NewsDB(conn);
-							News u2 = new News();
-							u2.setUserid(userid2);
-							u2.setGoodsid(goodsid);
-							u2.setNews("亲！"+username+"在你的" +goodsname+"留了言赶紧查看吧！");
-							db1.add(u2);
-							
-							table1.put("type", "liuyan");
-							
-							MyMessage m2 = new MyMessage();
-							m2.setReturnValue(table1);
-							new Action(m2, userid2).start();
 						}
 						m1.setReturnValue(table);
 
@@ -1450,8 +1558,8 @@ public class LoginServer extends Thread {
 					}
 					oout.writeObject(m1);
 					oout.flush();
-				}
-				else if (m.getType().equalsIgnoreCase(MyMessage.CATAGORYSEARCH)) {// 按类别搜索
+				} else if (m.getType().equalsIgnoreCase(
+						MyMessage.CATAGORYSEARCH)) {// 按类别搜索
 					Connection conn = DBManager.getDBManager().getConn();
 					MyMessage m1 = new MyMessage();
 					String goodsname;
@@ -1477,21 +1585,21 @@ public class LoginServer extends Thread {
 						while (rs.next()) {
 							SellS ask = new SellS();
 							ask.setGoodsid(rs.getInt("goodsid"));
-							useridString=rs.getString("userid");
+							useridString = rs.getString("userid");
 							ask.setGoodsname(rs.getString("goodsname"));
 							ask.setGoodsprice(rs.getString("goodsprice"));
 							ask.setSelltime(rs.getString("selltime"));
 							ask.setGoodsphoto1(rs.getString("goodsphoto1"));
-							
+
 							PreparedStatement pst1 = conn
 									.prepareStatement("select address,grade from users where userid=?");
 							pst1.setObject(1, useridString);
-							ResultSet rs1=pst1.executeQuery();
+							ResultSet rs1 = pst1.executeQuery();
 							while (rs1.next()) {
 								ask.setGrade(rs1.getString("grade"));
 								ask.setAddress(rs1.getString("address"));
 							}
-							
+
 							ab.add(ask);
 						}
 						Hashtable table = new Hashtable();
@@ -1510,7 +1618,33 @@ public class LoginServer extends Thread {
 					}
 					oout.writeObject(m1);
 					oout.flush();
-				} else if (m.getType().equalsIgnoreCase(MyMessage.SEARCH)) {// 按内容搜索
+				}
+				else if (m.getType().equalsIgnoreCase(MyMessage.MESSAGEDELETE)) {// 删除信息
+					Connection conn = DBManager.getDBManager().getConn();
+					MyMessage m1 = new MyMessage();
+					try {
+						conn.setAutoCommit(false);
+						NewsDB db = new NewsDB(conn);
+						int gid = (Integer) m.getValue().get("goodsid");
+						String userid =  m.getValue().get("userid").toString();
+						String userid2 =  m.getValue().get("userid2").toString();
+						db.delete(gid,userid,userid2);
+						conn.commit();
+						Hashtable table = new Hashtable();
+						table.put("message", "ok");
+						m1.setReturnValue(table);
+					} catch (Exception e) { // TODO: handle exception
+						conn.rollback();
+						Hashtable table = new Hashtable();
+						table.put("message", "error" + e.getMessage());
+						m1.setReturnValue(table);
+					} finally {
+						conn.close();
+					}
+					oout.writeObject(m1);
+					oout.close();
+				}
+				else if (m.getType().equalsIgnoreCase(MyMessage.SEARCH)) {// 按内容搜索
 					Connection conn = DBManager.getDBManager().getConn();
 					MyMessage m1 = new MyMessage();
 					try {
@@ -1531,21 +1665,21 @@ public class LoginServer extends Thread {
 						while (rs.next()) {
 							SellS ask = new SellS();
 							ask.setGoodsid(rs.getInt("goodsid"));
-							useridString=rs.getString("userid");
+							useridString = rs.getString("userid");
 							ask.setGoodsname(rs.getString("goodsname"));
 							ask.setGoodsprice(rs.getString("goodsprice"));
 							ask.setSelltime(rs.getString("selltime"));
 							ask.setGoodsphoto1(rs.getString("goodsphoto1"));
-							
+
 							PreparedStatement pst1 = conn
 									.prepareStatement("select address,grade from users where userid=?");
 							pst1.setObject(1, useridString);
-							ResultSet rs1=pst1.executeQuery();
+							ResultSet rs1 = pst1.executeQuery();
 							while (rs1.next()) {
 								ask.setGrade(rs1.getString("grade"));
 								ask.setAddress(rs1.getString("address"));
 							}
-							
+
 							ab.add(ask);
 						}
 						Hashtable table = new Hashtable();
@@ -1637,21 +1771,21 @@ public class LoginServer extends Thread {
 						while (rs.next()) {
 							SellS ask = new SellS();
 							ask.setGoodsid(rs.getInt("goodsid"));
-							useridString=rs.getString("userid");
+							useridString = rs.getString("userid");
 							ask.setGoodsname(rs.getString("goodsname"));
 							ask.setGoodsprice(rs.getString("goodsprice"));
 							ask.setSelltime(rs.getString("selltime"));
 							ask.setGoodsphoto1(rs.getString("goodsphoto1"));
-							
+
 							PreparedStatement pst1 = conn
 									.prepareStatement("select address,grade from users where userid=?");
 							pst1.setObject(1, useridString);
-							ResultSet rs1=pst1.executeQuery();
+							ResultSet rs1 = pst1.executeQuery();
 							while (rs1.next()) {
 								ask.setGrade(rs1.getString("grade"));
 								ask.setAddress(rs1.getString("address"));
 							}
-							
+
 							ab.add(ask);
 						}
 						Hashtable table = new Hashtable();
@@ -1670,7 +1804,8 @@ public class LoginServer extends Thread {
 					}
 					oout.writeObject(m1);
 					oout.flush();
-				} else if (m.getType().equalsIgnoreCase(MyMessage.MAIN_CATAGORYPOPULARITY)) {// 主页面类别选择人气推荐显示
+				} else if (m.getType().equalsIgnoreCase(
+						MyMessage.MAIN_CATAGORYPOPULARITY)) {// 主页面类别选择人气推荐显示
 					Connection conn = DBManager.getDBManager().getConn();
 					MyMessage m1 = new MyMessage();
 					try {
@@ -1691,21 +1826,21 @@ public class LoginServer extends Thread {
 						while (rs.next()) {
 							SellS ask = new SellS();
 							ask.setGoodsid(rs.getInt("goodsid"));
-							useridString=rs.getString("userid");
+							useridString = rs.getString("userid");
 							ask.setGoodsname(rs.getString("goodsname"));
 							ask.setGoodsprice(rs.getString("goodsprice"));
 							ask.setSelltime(rs.getString("selltime"));
 							ask.setGoodsphoto1(rs.getString("goodsphoto1"));
-							
+
 							PreparedStatement pst1 = conn
 									.prepareStatement("select address,grade from users where userid=?");
 							pst1.setObject(1, useridString);
-							ResultSet rs1=pst1.executeQuery();
+							ResultSet rs1 = pst1.executeQuery();
 							while (rs1.next()) {
 								ask.setGrade(rs1.getString("grade"));
 								ask.setAddress(rs1.getString("address"));
 							}
-							
+
 							ab.add(ask);
 						}
 						Hashtable table = new Hashtable();
@@ -1724,7 +1859,7 @@ public class LoginServer extends Thread {
 					}
 					oout.writeObject(m1);
 					oout.flush();
-				}else if (m.getType().equalsIgnoreCase(
+				} else if (m.getType().equalsIgnoreCase(
 						MyMessage.POPULARITYMORE)) {// 主菜单人气推荐加载更多
 					Connection conn = DBManager.getDBManager().getConn();
 					MyMessage m1 = new MyMessage();
@@ -1743,12 +1878,12 @@ public class LoginServer extends Thread {
 												+ "selltime, "
 												+ "goodsphoto1 "
 												+ "from (select *,row_number() over (order by (("
-										+ "SELECT COUNT(*) as collectnum "
-										+ "FROM sell,collect "
-										+ "where sell.goodsid=collect.goodsid and sell.goodsid=x.goodsid)*0.7+( "
-										+ "select COUNT(*) as leavenum "
-										+ "FROM sell,leaveword "
-										+ "where sell.goodsid=leaveword.goodsid and sell.goodsid=x.goodsid)*0.3) desc) as id from sell x) a where id between "
+												+ "SELECT COUNT(*) as collectnum "
+												+ "FROM sell,collect "
+												+ "where sell.goodsid=collect.goodsid and sell.goodsid=x.goodsid)*0.7+( "
+												+ "select COUNT(*) as leavenum "
+												+ "FROM sell,leaveword "
+												+ "where sell.goodsid=leaveword.goodsid and sell.goodsid=x.goodsid)*0.3) desc) as id from sell x) a where id between "
 												+ num + " and " + num2
 												+ " order by id");
 
@@ -1757,21 +1892,21 @@ public class LoginServer extends Thread {
 						while (rs.next()) {
 							SellS ask = new SellS();
 							ask.setGoodsid(rs.getInt("goodsid"));
-							useridString=rs.getString("userid");
+							useridString = rs.getString("userid");
 							ask.setGoodsname(rs.getString("goodsname"));
 							ask.setGoodsprice(rs.getString("goodsprice"));
 							ask.setSelltime(rs.getString("selltime"));
 							ask.setGoodsphoto1(rs.getString("goodsphoto1"));
-							
+
 							PreparedStatement pst1 = conn
 									.prepareStatement("select address,grade from users where userid=?");
 							pst1.setObject(1, useridString);
-							ResultSet rs1=pst1.executeQuery();
+							ResultSet rs1 = pst1.executeQuery();
 							while (rs1.next()) {
 								ask.setGrade(rs1.getString("grade"));
 								ask.setAddress(rs1.getString("address"));
 							}
-							
+
 							ab.add(ask);
 						}
 						Hashtable table = new Hashtable();
@@ -1790,8 +1925,7 @@ public class LoginServer extends Thread {
 					}
 					oout.writeObject(m1);
 					oout.flush();
-				}
-				else if (m.getType().equalsIgnoreCase(
+				} else if (m.getType().equalsIgnoreCase(
 						MyMessage.MAIN_CATAGORYSEARCHREFRESH)) {// 主页面类别选择显示刷新
 					Connection conn = DBManager.getDBManager().getConn();
 					String useridString;
@@ -1889,21 +2023,21 @@ public class LoginServer extends Thread {
 						while (rs.next()) {
 							SellS ask = new SellS();
 							ask.setGoodsid(rs.getInt("goodsid"));
-							useridString=rs.getString("userid");
+							useridString = rs.getString("userid");
 							ask.setGoodsname(rs.getString("goodsname"));
 							ask.setGoodsprice(rs.getString("goodsprice"));
 							ask.setSelltime(rs.getString("selltime"));
 							ask.setGoodsphoto1(rs.getString("goodsphoto1"));
-							
+
 							PreparedStatement pst1 = conn
 									.prepareStatement("select address,grade from users where userid=?");
 							pst1.setObject(1, useridString);
-							ResultSet rs1=pst1.executeQuery();
+							ResultSet rs1 = pst1.executeQuery();
 							while (rs1.next()) {
 								ask.setGrade(rs1.getString("grade"));
 								ask.setAddress(rs1.getString("address"));
 							}
-							
+
 							ab.add(ask);
 						}
 						Hashtable table = new Hashtable();
@@ -2084,21 +2218,21 @@ public class LoginServer extends Thread {
 						while (rs.next()) {
 							SellS ask = new SellS();
 							ask.setGoodsid(rs.getInt("goodsid"));
-							useridString=rs.getString("userid");
+							useridString = rs.getString("userid");
 							ask.setGoodsname(rs.getString("goodsname"));
 							ask.setGoodsprice(rs.getString("goodsprice"));
 							ask.setSelltime(rs.getString("selltime"));
 							ask.setGoodsphoto1(rs.getString("goodsphoto1"));
-							
+
 							PreparedStatement pst1 = conn
 									.prepareStatement("select address,grade from users where userid=?");
 							pst1.setObject(1, useridString);
-							ResultSet rs1=pst1.executeQuery();
+							ResultSet rs1 = pst1.executeQuery();
 							while (rs1.next()) {
 								ask.setGrade(rs1.getString("grade"));
 								ask.setAddress(rs1.getString("address"));
 							}
-							
+
 							ab.add(ask);
 						}
 						Hashtable table = new Hashtable();
@@ -2175,7 +2309,7 @@ public class LoginServer extends Thread {
 					try {
 						String userid = m.getValue().get("userid").toString();
 						PreparedStatement pst = conn
-								.prepareStatement("select news,newstime,goodsid,state from news where userid=? order by newstime desc");
+								.prepareStatement("select news,newstime,goodsid,state,userid2 from news where userid=? order by newstime desc");
 						pst.setObject(1, userid);
 						ResultSet rs = pst.executeQuery();
 
@@ -2187,6 +2321,7 @@ public class LoginServer extends Thread {
 							ask.setNews(rs.getString("news"));
 							ask.setNewstime(rs.getString("newstime"));
 							ask.setState(rs.getInt("state"));
+							ask.setUserid2(rs.getString("userid2"));
 							ab.add(ask);
 						}
 						Hashtable table = new Hashtable();
@@ -2261,7 +2396,294 @@ public class LoginServer extends Thread {
 					}
 					oout.writeObject(m1);
 					oout.flush();
+				} else if (m.getType().equalsIgnoreCase(MyMessage.FIRSTMESSAGE)) {// 第一次建立聊天会话
+					Connection conn = DBManager.getDBManager().getConn();
+					MyMessage m1 = new MyMessage();
+					MyMessage m3 = new MyMessage();
+					MyMessage m2 = new MyMessage();
+					try {
+						String userid1 = m.getValue().get("userid1").toString();
+						String userid2 = m.getValue().get("userid2").toString();
+						String timeString = new Date().toGMTString();
+						String content = m.getValue().get("content").toString();
+						String id = null;
+						boolean b=true;
+						
+						PreparedStatement pst3 = conn
+								.prepareStatement("select id from chat where userid1=? and userid2=?");
+						pst3.setString(1,userid1 );
+						pst3.setString(2, userid2);
+						ResultSet rs3 = pst3.executeQuery();
+						while (rs3.next()) {
+							id=rs3.getString("id");
+							b=false;
+						}
+						if (b) {
+							PreparedStatement pst4= conn
+									.prepareStatement("select id from chat where userid1=? and userid2=?");
+							pst4.setString(1,userid2 );
+							pst4.setString(2, userid1);
+							ResultSet rs4 = pst4.executeQuery();
+							while (rs4.next()) {
+								id=rs4.getString("id");
+							}
+						}
+						
+						if (id==null) {
+							String key = new Date().getTime() + "R"
+									+ (Math.random() * 1000) + "R"
+									+ (Math.random() * 1000);
+							
+							PreparedStatement pst = conn
+									.prepareStatement("insert into chat(id,userid1,userid2,content) values (?,?,?,?)");
+							pst.setString(1, key);
+							pst.setString(2, userid1);
+							pst.setString(3, userid2);
+							
+							pst.setString(4, m.getValue().get("content").toString());
+						
+							if (pst.executeUpdate() <= 0) {
+								throw new Exception();
+							}
+						}else {
+							PreparedStatement pst = conn
+									.prepareStatement("insert into chat (id,userid1,userid2,content) values (?,?,?,?)");
+							pst.setString(1, id);
+							pst.setString(2, userid1);
+							pst.setString(3, userid2);
+							pst.setString(4, m.getValue().get("content").toString());
+							
+							if (pst.executeUpdate() <= 0) {
+								throw new Exception();
+							}
+						}
+						
+						Hashtable table1 = new Hashtable();
+						table1.put("message", "ok");
+						m2.setReturnValue(table1);
+						new ChatAction(m2, userid2).start();
+
+						PreparedStatement pst1 = conn
+								.prepareStatement("select username from users where userid=?");
+						pst1.setObject(1, userid1);
+						ResultSet rs1 = pst1.executeQuery();
+						while (rs1.next()) {
+							String username = rs1.getString("username");
+							NewsDB db1 = new NewsDB(conn);
+							if (!db1.ishaveusernews(userid2, userid1)) {
+								News u2 = new News();
+								u2.setUserid(userid2);
+								u2.setUserid2(userid1);
+								System.out.println("uuu");
+								System.out.println(u2.getUserid2());
+								u2.setNews("" + username + "说：" + content);
+								db1.add(u2);
+							} else {
+								java.util.Date dt = new java.util.Date();
+								Timestamp tt = new Timestamp(dt.getTime());
+								
+								PreparedStatement pst2 = conn
+										.prepareStatement("update news set news=?,newstime=?,state=? where userid=? and userid2=?");
+								pst2.setString(1, username+"说："+content);
+								pst2.setString(2,String.valueOf(tt));
+								pst2.setInt(3, 0);
+								pst2.setString(4, userid2);
+								pst2.setString(5, userid1);
+								
+								if (pst2.executeUpdate() <= 0) {
+									throw new Exception();
+								}
+							}
+							Hashtable table2 = new Hashtable();
+							table2.put("message", "ok");
+							table2.put("type", "chat");
+							table2.put("content", content);
+							table2.put("username", username);
+							m3.setReturnValue(table2);
+							new Action(m3, userid2).start();
+						}
+
+						Hashtable table = new Hashtable();
+						table.put("message", "ok");
+						m1.setReturnValue(table);
+					} catch (Exception e) {
+						// TODO: handle exception
+						e.printStackTrace();
+						Hashtable table = new Hashtable();
+						table.put("message", "error");
+						m1.setReturnValue(table);
+					} finally {
+						conn.close();
+					}
+					oout.writeObject(m1);
+					oout.flush();
+				}else if (m.getType().equalsIgnoreCase(MyMessage.REFRESHMESSAGE)) {// 更新聊天信息
+					Connection conn = DBManager.getDBManager().getConn();
+					MyMessage m1 = new MyMessage();
+					try {
+						Hashtable table = new Hashtable();
+						String time = m.getValue().get("time").toString();
+						System.out.println(time);
+						String userid1=m.getValue().get("userid1").toString();
+						String userid2=m.getValue().get("userid2").toString();
+						String id = null;
+						boolean b=true;
+						PreparedStatement pst3 = conn
+								.prepareStatement("select id from chat where userid1=? and userid2=?");
+						pst3.setString(1,userid1 );
+						pst3.setString(2, userid2);
+						ResultSet rs3 = pst3.executeQuery();
+						while (rs3.next()) {
+							id=rs3.getString("id");
+							b=false;
+						}
+						if (b) {
+							PreparedStatement pst4= conn
+									.prepareStatement("select id from chat where userid1=? and userid2=?");
+							pst4.setString(1,userid2 );
+							pst4.setString(2, userid1);
+							ResultSet rs4 = pst4.executeQuery();
+							while (rs4.next()) {
+								id=rs4.getString("id");
+							}
+						}
+						
+						PreparedStatement pst = conn
+								.prepareStatement("select content,time,userid1,userid2 from chat where id=? and time>? order by time desc");
+						pst.setString(1, id);
+						pst.setString(2, time);
+						ResultSet rs = pst.executeQuery();
+						Vector<ChatS> ab = new Vector<ChatS>();
+						while (rs.next()) {
+							if (!time.equals(rs.getString("time"))) {
+								ChatS ask = new ChatS();
+								ask.setTime(rs.getString("time"));
+								ask.setContent(rs.getString("content"));
+								ask.setUserid1(rs.getString("userid1"));
+								ask.setUserid2(rs.getString("userid2"));
+								ab.add(ask);
+							}
+
+						}
+
+						table.put("message", "ok");
+						table.put("chat", ab);
+						m1.setReturnValue(table);
+					} catch (Exception e) {
+						// TODO: handle exception
+						e.printStackTrace();
+						Hashtable table = new Hashtable();
+						table.put("message", "error");
+						m1.setReturnValue(table);
+					} finally {
+						conn.close();
+					}
+					oout.writeObject(m1);
+					oout.flush();
+				} else if (m.getType().equalsIgnoreCase(
+						MyMessage.DOWNCHATMESSAGE)) {//下载聊天信息
+					Connection conn = DBManager.getDBManager().getConn();
+					MyMessage m1 = new MyMessage();
+					try {
+						Hashtable table = new Hashtable();
+						String userid1=m.getValue().get("userid1").toString();
+						String userid2=m.getValue().get("userid2").toString();
+						String id = null;
+						boolean b=true;
+						PreparedStatement pst3 = conn
+								.prepareStatement("select id from chat where userid1=? and userid2=?");
+						pst3.setString(1,userid1 );
+						pst3.setString(2, userid2);
+						ResultSet rs3 = pst3.executeQuery();
+						while (rs3.next()) {
+							id=rs3.getString("id");
+							b=false;
+						}
+						if (b) {
+							PreparedStatement pst4= conn
+									.prepareStatement("select id from chat where userid1=? and userid2=?");
+							pst4.setString(1,userid2 );
+							pst4.setString(2, userid1);
+							ResultSet rs4 = pst4.executeQuery();
+							while (rs4.next()) {
+								id=rs4.getString("id");
+							}
+						}
+					
+						PreparedStatement pst = conn
+								.prepareStatement("select content,time,userid1,userid2 from chat where id=?");
+						pst.setString(1, id);
+						ResultSet rs = pst.executeQuery();
+						Vector<ChatS> ab = new Vector<ChatS>();
+						while (rs.next()) {
+							ChatS ask = new ChatS();
+							ask.setTime(rs.getString("time"));
+							ask.setContent(rs.getString("content"));
+							ask.setUserid1(rs.getString("userid1"));
+							ask.setUserid2(rs.getString("userid2"));
+							ab.add(ask);
+
+						}
+
+						table.put("message", "ok");
+						table.put("chat", ab);
+						m1.setReturnValue(table);
+					} catch (Exception e) {
+						// TODO: handle exception
+						e.printStackTrace();
+						Hashtable table = new Hashtable();
+						table.put("message", "error");
+						m1.setReturnValue(table);
+					} finally {
+						conn.close();
+					}
+					oout.writeObject(m1);
+					oout.flush();
 				}
+				 else if (m.getType().equalsIgnoreCase(
+							MyMessage.CHATNAME)) {//下载聊天的两人的姓名
+						Connection conn = DBManager.getDBManager().getConn();
+						MyMessage m1 = new MyMessage();
+						try {
+							Hashtable table = new Hashtable();
+							String userid1=m.getValue().get("userid1").toString();
+							String userid2=m.getValue().get("userid2").toString();
+							String username1 = null,username2 = null;
+							
+							PreparedStatement pst2 = conn
+									.prepareStatement("select username from users where userid=?");
+							pst2.setString(1, userid1);
+							ResultSet rs1 = pst2.executeQuery();
+							while (rs1.next()) {
+								username1=rs1.getString("username");
+
+							}
+							
+							
+							PreparedStatement pst= conn
+									.prepareStatement("select username from users where userid=?");
+							pst.setString(1, userid2);
+							ResultSet rs = pst.executeQuery();
+							while (rs.next()) {
+								username2=rs.getString("username");
+							}
+
+							table.put("message", "ok");
+							table.put("username1", username1);
+							table.put("username2", username2);
+							m1.setReturnValue(table);
+						} catch (Exception e) {
+							// TODO: handle exception
+							e.printStackTrace();
+							Hashtable table = new Hashtable();
+							table.put("message", "error");
+							m1.setReturnValue(table);
+						} finally {
+							conn.close();
+						}
+						oout.writeObject(m1);
+						oout.flush();
+					}
 			}
 
 		} catch (Exception e) {

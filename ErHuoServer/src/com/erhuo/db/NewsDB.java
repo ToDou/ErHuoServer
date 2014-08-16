@@ -16,21 +16,23 @@ public class NewsDB {
 	//添加信息
 	public void add(News obj) throws Exception {
 		PreparedStatement st = conn
-				.prepareStatement("insert into news(userid,news,goodsid) values(?,?,?)");
+				.prepareStatement("insert into news(userid,news,goodsid,userid2) values(?,?,?,?)");
 
 		st.setString(1, obj.getUserid());
 		st.setString(2, obj.getNews());
 		st.setInt(3, obj.getGoodsid());
+		st.setString(4, obj.getUserid2());
 		if (st.executeUpdate() <= 0) {
 			throw new Exception();
 		}
 	}
 	//删除信息
-	public void delete(int obj,String userid) throws Exception {
+	public void delete(int obj,String userid,String userid2) throws Exception {
 		PreparedStatement st = conn
-				.prepareStatement("delete from news where userid=? and goodsid=?");
+				.prepareStatement("delete from news where userid=? and goodsid=? and userid2=?");
 		st.setObject(1, userid);
 		st.setObject(2, obj);
+		st.setObject(3, userid2);
 		if (st.executeUpdate() <= 0) {
 			throw new Exception();
 		}
@@ -98,6 +100,20 @@ public class NewsDB {
 				.prepareStatement("select userid from news where userid=? and goodsid=?");
 		st.setObject(1, userid);
 		st.setObject(2, goodsid);
+		ResultSet rsResultSet = st.executeQuery();
+		while (rsResultSet.next()) {
+			b = true;
+		}
+		return b;
+	}
+	
+	public boolean ishaveusernews(String userid,String userid2)
+			throws Exception {
+		boolean b = false;
+		PreparedStatement st = conn
+				.prepareStatement("select userid from news where userid=? and userid2=?");
+		st.setObject(1, userid);
+		st.setObject(2, userid2);
 		ResultSet rsResultSet = st.executeQuery();
 		while (rsResultSet.next()) {
 			b = true;

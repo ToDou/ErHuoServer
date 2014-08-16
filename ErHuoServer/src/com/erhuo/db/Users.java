@@ -3,6 +3,8 @@ package com.erhuo.db;
 public class Users {
 	private String address;
 	private String grade;
+	private String qq;
+	private String email;
 
 	private String userid;
 
@@ -58,6 +60,22 @@ public class Users {
 
 	public void setGrade(String grade) {
 		this.grade = grade;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public String getQq() {
+		return qq;
+	}
+
+	public void setQq(String qq) {
+		this.qq = qq;
 	}
 	
 }

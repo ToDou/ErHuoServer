@@ -57,7 +57,15 @@ public class MyMessage implements Serializable {
     public static final String POPULARITYMORE="POPULARITYMORE";
     public static final String CHANGEADDRESS="CHANGEADDRESS";
     public static final String CHANGEGRADE="CHANGEGRADE";
-
+    public static final String FIRSTMESSAGE="FIRSTMESSAGE";
+    public static final String SECONDMESSAGE="SECONDMESSAGE";
+    public static final String REFRESHMESSAGE="REFRESHMESSAGE";
+    public static final String DOWNCHATMESSAGE="DOWNCHATMESSAGE";
+    public static final String CHATNAME="CHATNAME";  
+    public static final String CHANGEQQ="CHANGEQQ";
+    public static final String CHANGEEMAIL="CHANGEEMAIL";
+    public static final String MESSAGEDELETE="MESSAGEDELETE";
+    
 	public Hashtable<String,Object> value = null;
 	public Hashtable<String,Object> returnValue = null;
 

@@ -14,7 +14,7 @@ public class UsersDB {
 
 	public void add(Users obj) throws Exception {
 		PreparedStatement st = conn
-				.prepareStatement("insert into users(userid,userpassword,username,sex,address,grade) values(?,?,?,?,?,?)");
+				.prepareStatement("insert into users(userid,userpassword,username,sex,address,grade,qq,email) values(?,?,?,?,?,?,?,?)");
 		
 		st.setString(1, obj.getUserid());
 		st.setString(2, obj.getPassword());
@@ -22,6 +22,8 @@ public class UsersDB {
 		st.setString(4, obj.getSex());
 		st.setString(5, obj.getAddress());
 		st.setString(6, obj.getGrade());
+		st.setString(7, obj.getQq());
+		st.setString(8, obj.getEmail());
 		if (st.executeUpdate() <= 0) {
 			throw new Exception();
 		}
@@ -29,12 +31,14 @@ public class UsersDB {
 
 	public void set(Users obj) throws Exception {
 		PreparedStatement st = conn
-				.prepareStatement("update users set userpassword,username,sex,address,grade where userid=?");
+				.prepareStatement("update users set userpassword,username,sex,address,grade,qq,email where userid=?");
 		st.setString(2, obj.getPassword());
 		st.setString(3, obj.getUserName());
 		st.setString(4, obj.getSex());
 		st.setString(5, obj.getAddress());
 		st.setString(6, obj.getGrade());
+		st.setString(7, obj.getQq());
+		st.setString(8, obj.getEmail());
 		if (st.executeUpdate() <= 0) {
 			throw new Exception();
 		}
@@ -109,6 +113,27 @@ public class UsersDB {
 				throw new Exception();
 			}
 		}
+		//ÐÞ¸Äqq
+				public void setQQ(Users obj) throws Exception {
+					PreparedStatement st = conn
+							.prepareStatement("update users set qq=? where userid=?");
+					st.setString(1, obj.getQq());
+					st.setString(2, obj.getUserid());
+					if (st.executeUpdate() <= 0) {
+						throw new Exception();
+					}
+				}
+				
+				//ÐÞ¸Äemail
+				public void setEmail(Users obj) throws Exception {
+					PreparedStatement st = conn
+							.prepareStatement("update users set email=? where userid=?");
+					st.setString(1, obj.getEmail());
+					st.setString(2, obj.getUserid());
+					if (st.executeUpdate() <= 0) {
+						throw new Exception();
+					}
+				}
 	//
 	public Vector<Users> finduser(String cname, Object value)
 			throws Exception {
@@ -125,6 +150,8 @@ public class UsersDB {
 			obj1.setSex(re.getString("sex"));
 			obj1.setAddress(re.getString("address"));
 			obj1.setGrade(re.getString("grade"));
+			obj1.setEmail(re.getString("email"));
+			obj1.setQq(re.getString("qq"));
 			list.add(obj1);
 		}
 		return list;
@@ -145,6 +172,8 @@ public class UsersDB {
 			obj1.setSex(re.getString("sex"));
 			obj1.setAddress(re.getString("address"));
 			obj1.setGrade(re.getString("grade"));
+			obj1.setEmail(re.getString("email"));
+			obj1.setQq(re.getString("qq"));
 			list.add(obj1);
 		}
 		return list;
@@ -162,6 +191,8 @@ public class UsersDB {
 			obj1.setSex(re.getString("sex"));
 			obj1.setAddress(re.getString("address"));
 			obj1.setGrade(re.getString("grade"));
+			obj1.setEmail(re.getString("email"));
+			obj1.setQq(re.getString("qq"));
 			
 			list.add(obj1);
 		}

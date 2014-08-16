@@ -39,6 +39,18 @@ public class StartServer {
 			};
 			
 		}.start();
+		new Thread(){
+			public void run() {
+				try {
+					ChatActionServer.openServer();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			};
+			
+		}.start();
 		
 	}
 

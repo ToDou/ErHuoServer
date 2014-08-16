@@ -2,6 +2,7 @@ package com.erhuo.db;
 
 public class News {
  private String userid;
+ private String userid2;
  private String news;
  private String newstime;
  private int goodsid;
@@ -49,6 +50,12 @@ public int getState() {
 }
 public void setState(int state) {
 	this.state = state;
+}
+public String getUserid2() {
+	return userid2;
+}
+public void setUserid2(String userid2) {
+	this.userid2 = userid2;
 }
  
 }
